@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flask · full-stack to-do</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background: linear-gradient(145deg, #f6f9fc 0%, #e9f0f5 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .card {
+      max-width: 780px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 45px -12px rgba(0, 20, 30, 0.3);
+      padding: 2.2rem 2rem 2.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transition: all 0.2s;
+    }
+    h1 {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-weight: 600;
+      font-size: 2.1rem;
+      letter-spacing: -0.02em;
+      color: #0a1e2b;
+      margin-bottom: 0.25rem;
+    }
+    h1 small {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #3a5a6e;
+      background: #d3e2ed;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+      margin-left: 0.5rem;
+    }
+    .subhead {
+      color: #2c4a5e;
+      margin-bottom: 2rem;
+      font-weight: 400;
+      font-size: 0.95rem;
+      border-left: 3px solid #3e8fb0;
+      padding-left: 0.9rem;
+      background: rgba(62, 143, 176, 0.06);
+      border-radius: 0 8px 8px 0;
+    }
+    .todo-form {
+      display: flex;
+      gap: 0.7rem;
+      margin-bottom: 2.2rem;
+      flex-wrap: wrap;
+    }
+    .todo-form input {
+      flex: 2 1 220px;
+      padding: 0.9rem 1.2rem;
+      border: none;
+      background: #f0f6fb;
+      border-radius: 60px;
+      font-size: 1rem;
+      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.02), 0 0 0 1px #d7e2ec;
+      transition: 0.2s;
+      outline: none;
+    }
+    .todo-form input:focus {
+      background: white;
+      box-shadow: inset 0 4px 8px rgba(0,0,0,0.01), 0 0 0 2px #3e8fb0;
+    }
+    .todo-form button {
+      flex: 0 1 auto;
+      background: #1f4a62;
+      border: none;
+      color: white;
+      font-weight: 500;
+      padding: 0.9rem 1.8rem;
+      border-radius: 60px;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 8px 18px -6px #1f4a6250;
+      transition: 0.15s;
+      letter-spacing: 0.3px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .todo-form button:hover {
+      background: #123a4f;
+      transform: scale(1.01);
+      box-shadow: 0 12px 22px -8px #123a4f70;
+    }
+    .todo-form button:active {
+      transform: scale(0.96);
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      background: #e4eef7;
+      padding: 0.5rem 1.2rem;
+      border-radius: 60px;
+    }
+    .status-bar span {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1f3d4f;
+    }
+    .status-bar .count {
+      background: #1f4a62;
+      color: white;
+      padding: 0.1rem 0.9rem;
+      border-radius: 40px;
+      font-size: 0.8rem;
+    }
+    .clear-btn {
+      background: transparent;
+      border: none;
+      color: #6f8b9e;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.3rem 1rem;
+      border-radius: 30px;
+      transition: 0.1s;
+      font-size: 0.85rem;
+    }
+    .clear-btn:hover {
+      background: #d3e2ed;
+      color: #1d3b4e;
+    }
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin: 1.2rem 0 0.8rem;
+      max-height: 420px;
+      overflow-y: auto;
+      padding-right: 0.3rem;
+    }
+    .todo-item {
+      background: white;
+      padding: 0.8rem 1.4rem 0.8rem 1.8rem;
+      border-radius: 80px;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.02), 0 0 0 1px #dde8f0;
+      transition: 0.15s;
+      backdrop-filter: blur(2px);
+    }
+    .todo-item:hover {
+      box-shadow: 0 8px 18px -8px rgba(20, 60, 80, 0.12), 0 0 0 1px #b6d0de;
+    }
+    .todo-item .todo-text {
+      flex: 1;
+      font-size: 1rem;
+      color: #112b3b;
+      word-break: break-word;
+      padding: 0.2rem 0;
+    }
+    .todo-item .todo-text.completed {
+      text-decoration: line-through;
+      color: #7998ad;
+    }
+    .todo-item .actions {
+      display: flex;
+      gap: 0.2rem;
+      flex-shrink: 0;
+    }
+    .todo-item .actions button {
+      background: transparent;
+      border: none;
+      width: 34px;
+      height: 34px;
+      border-radius: 40px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.1s;
+      color: #3f637a;
+      background: #ecf3f9;
+    }
+    .todo-item .actions button:hover {
+      background: #d3e2ed;
+      color: #0f2f40;
+    }
+    .todo-item .actions .delete-btn:hover {
+      background: #f7dfe0;
+      color: #b33a44;
+    }
+    .empty-message {
+      text-align: center;
+      color: #6b8b9e;
+      padding: 2.5rem 0;
+      font-weight: 400;
+      background: #eef5fa;
+      border-radius: 60px;
+      margin: 0.5rem 0;
+    }
+    .footer {
+      margin-top: 1.8rem;
+      font-size: 0.8rem;
+      color: #4d6f84;
+      display: flex;
+      justify-content: flex-end;
+      border-top: 1px solid #d2e0ea;
+      padding-top: 1.4rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .footer .badge {
+      background: #e3edf5;
+      padding: 0.2rem 1rem;
+      border-radius: 30px;
+    }
+    .footer .badge i {
+      font-style: normal;
+      background: #1f4a62;
+      color: white;
+      padding: 0.1rem 0.7rem;
+      border-radius: 30px;
+      margin-left: 6px;
+    }
+    @media (max-width: 480px) {
+      .card { padding: 1.5rem; }
+      .todo-item { flex-wrap: wrap; padding: 0.8rem 1rem; border-radius: 30px; }
+      .todo-item .todo-text { flex: 1 1 100%; order: 0; }
+      .todo-item .actions { order: 1; margin-left: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="card" id="app">
+  <header style="display: flex; justify-content: space-between; align-items: center;">
+    <h1>
+      ✓ to-do
+      <small>flask</small>
+    </h1>
+    <span style="background: #d2e0ea; padding: 0.2rem 1rem; border-radius: 40px; font-size: 0.75rem; font-weight: 500; color: #1f3f53;">python · REST</span>
+  </header>
+  <div class="subhead">persistent with Flask · SQLite · full‑stack</div>
+
+  <!-- form -->
+  <div class="todo-form">
+    <input type="text" id="taskInput" placeholder="add a new task…" autocomplete="off" />
+    <button id="addBtn">➕ Add</button>
+  </div>
+
+  <!-- status -->
+  <div class="status-bar">
+    <span>📋 <span id="taskCounter">0</span> tasks</span>
+    <span class="count" id="pendingCounter">pending: 0</span>
+    <button class="clear-btn" id="clearCompletedBtn">✔ clear completed</button>
+  </div>
+
+  <!-- list -->
+  <div class="todo-list" id="todoListContainer">
+    <div class="empty-message">✨ list is empty · add a task</div>
+  </div>
+
+  <div class="footer">
+    <span class="badge">⚡ Flask API <i>/api/todos</i></span>
+    <span style="opacity:0.6;">data persisted</span>
+  </div>
+</div>
+
+<script>
+  (function() {
+    "use strict";
+
+    // ---------- CONFIG ----------
+    const API_BASE = '/api/todos';   // Flask endpoint
+
+    // ---------- DOM refs ----------
+    const todoContainer = document.getElementById('todoListContainer');
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const taskCounter = document.getElementById('taskCounter');
+    const pendingCounter = document.getElementById('pendingCounter');
+    const clearCompletedBtn = document.getElementById('clearCompletedBtn');
+
+    // ---------- state ----------
+    let todos = [];
+
+    // ---------- helpers / render ----------
+    function updateCounters() {
+      const total = todos.length;
+      const pending = todos.filter(t => !t.completed).length;
+      taskCounter.textContent = total;
+      pendingCounter.textContent = `pending: ${pending}`;
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text).replace(/[&<>"]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        if (m === '"') return '&quot;';
+        return m;
+      });
+    }
+
+    function render() {
+      if (!todoContainer) return;
+
+      if (todos.length === 0) {
+        todoContainer.innerHTML = `<div class="empty-message">📭 no tasks · add one</div>`;
+        updateCounters();
+        return;
+      }
+
+      let html = '';
+      for (let i = 0; i < todos.length; i++) {
+        const t = todos[i];
+        const checkedClass = t.completed ? 'completed' : '';
+        html += `
+          <div class="todo-item" data-id="${t.id}">
+            <span class="todo-text ${checkedClass}">${escapeHtml(t.title)}</span>
+            <div class="actions">
+              <button class="toggle-btn" data-id="${t.id}" title="toggle complete">${t.completed ? '↩' : '✓'}</button>
+              <button class="delete-btn" data-id="${t.id}" title="delete task">✕</button>
+            </div>
+          </div>
+        `;
+      }
+      todoContainer.innerHTML = html;
+      updateCounters();
+
+      // event delegation for toggle / delete
+      todoContainer.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = Number(btn.getAttribute('data-id'));
+          toggleTodo(id);
+        });
+      });
+
+      todoContainer.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = Number(btn.getAttribute('data-id'));
+          deleteTodo(id);
+        });
+      });
+    }
+
+    // ---------- API calls ----------
+    async function fetchTodos() {
+      try {
+        const res = await fetch(API_BASE);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        todos = data;
+        render();
+      } catch (err) {
+        console.warn('fetchTodos error:', err);
+        todos = [];
+        render();
+        todoContainer.innerHTML = `<div class="empty-message" style="background:#fde9e9;">⚠️ Flask server error · is it running?</div>`;
+      }
+    }
+
+    async function addTodo(title) {
+      if (!title || title.trim() === '') return false;
+      const newTodo = { title: title.trim(), completed: false };
+      try {
+        const res = await fetch(API_BASE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTodo)
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const saved = await res.json();
+        todos.push(saved);
+        render();
+        return true;
+      } catch (err) {
+        console.warn('addTodo error:', err);
+        alert('Could not add task. Is Flask server running?');
+        return false;
+      }
+    }
+
+    async function toggleTodo(id) {
+      const todo = todos.find(t => t.id === id);
+      if (!todo) return;
+      const updated = { ...todo, completed: !todo.completed };
+      try {
+        const res = await fetch(`${API_BASE}/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: updated.completed })
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const result = await res.json();
+        const idx = todos.findIndex(t => t.id === id);
+        if (idx !== -1) todos[idx] = result;
+        render();
+      } catch (err) {
+        console.warn('toggleTodo error:', err);
+        alert('Toggle failed. Check server.');
+      }
+    }
+
+    async function deleteTodo(id) {
+      if (!confirm('Delete this task?')) return;
+      try {
+        const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        todos = todos.filter(t => t.id !== id);
+        render();
+      } catch (err) {
+        console.warn('deleteTodo error:', err);
+        alert('Delete failed. Check server.');
+      }
+    }
+
+    async function clearCompleted() {
+      const completedIds = todos.filter(t => t.completed).map(t => t.id);
+      if (completedIds.length === 0) {
+        alert('No completed tasks to clear.');
+        return;
+      }
+      if (!confirm(`Delete ${completedIds.length} completed task(s)?`)) return;
+
+      try {
+        for (const id of completedIds) {
+          await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        }
+        todos = todos.filter(t => !t.completed);
+        render();
+      } catch (err) {
+        console.warn('clearCompleted error:', err);
+        alert('Error clearing completed tasks.');
+      }
+    }
+
+    // ---------- event binding ----------
+    function initEvents() {
+      addBtn.addEventListener('click', async () => {
+        const val = taskInput.value;
+        const ok = await addTodo(val);
+        if (ok) taskInput.value = '';
+        taskInput.focus();
+      });
+
+      taskInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addBtn.click();
+        }
+      });
+
+      clearCompletedBtn.addEventListener('click', clearCompleted);
+    }
+
+    // ---------- start ----------
+    function init() {
+      fetchTodos();
+      initEvents();
+      taskInput.focus();
+    }
+
+    init();
+  })();
+</script>
+
+<!-- 
+  Flask backend code (app.py) – copy this into a separate file:
+  
+  from flask import Flask, request, jsonify, g
+  import sqlite3
+  import os
+
+  app = Flask(__name__, static_folder='.', static_url_path='')
+  DATABASE = 'todos.db'
+
+  def get_db():
+      db = getattr(g, '_database', None)
+      if db is None:
+          db = g._database = sqlite3.connect(DATABASE)
+          db.row_factory = sqlite3.Row
+      return db
+
+  @app.teardown_appcontext
+  def close_connection(exception):
+      db = getattr(g, '_database', None)
+      if db is not None:
+          db.close()
+
+  def init_db():
+      with app.app_context():
+          db = get_db()
+          db.execute('CREATE TABLE IF NOT EXISTS todos (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, completed BOOLEAN NOT NULL DEFAULT 0)')
+          db.commit()
+
+  @app.route('/')
+  def index():
+      return app.send_static_file('index.html')
+
+  @app.route('/api/todos', methods=['GET'])
+  def get_todos():
+      db = get_db()
+      cur = db.execute('SELECT id, title, completed FROM todos ORDER BY id')
+      rows = cur.fetchall()
+      return jsonify([dict(row) for row in rows])
+
+  @app.route('/api/todos', methods=['POST'])
+  def create_todo():
+      data = request.get_json()
+      if not data or 'title' not in data:
+          return jsonify({'error': 'title required'}), 400
+      title = data['title'].strip()
+      if not title:
+          return jsonify({'error': 'title cannot be empty'}), 400
+      db = get_db()
+      cur = db.execute('INSERT INTO todos (title, completed) VALUES (?, ?)', (title, 0))
+      db.commit()
+      new_id = cur.lastrowid
+      row = db.execute('SELECT id, title, completed FROM todos WHERE id = ?', (new_id,)).fetchone()
+      return jsonify(dict(row)), 201
+
+  @app.route('/api/todos/<int:id>', methods=['PATCH'])
+  def update_todo(id):
+      data = request.get_json()
+      if data is None or 'completed' not in data:
+          return jsonify({'error': 'completed field required'}), 400
+      completed = 1 if data['completed'] else 0
+      db = get_db()
+      db.execute('UPDATE todos SET completed = ? WHERE id = ?', (completed, id))
+      db.commit()
+      row = db.execute('SELECT id, title, completed FROM todos WHERE id = ?', (id,)).fetchone()
+      if row is None:
+          return jsonify({'error': 'todo not found'}), 404
+      return jsonify(dict(row))
+
+  @app.route('/api/todos/<int:id>', methods=['DELETE'])
+  def delete_todo(id):
+      db = get_db()
+      db.execute('DELETE FROM todos WHERE id = ?', (id,))
+      db.commit()
+      return jsonify({'message': 'deleted'}), 200
+
+  if __name__ == '__main__':
+      init_db()
+      app.run(host='0.0.0.0', port=5000, debug=True)
+
+  How to run:
+  1. Save this HTML as index.html
+  2. Save the Flask code above as app.py in the same folder
+  3. Run: python app.py
+  4. Open http://localhost:5000
+-->
+</body>
+</html>
